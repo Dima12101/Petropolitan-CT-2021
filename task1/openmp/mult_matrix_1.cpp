@@ -5,12 +5,19 @@
 
 using namespace std;
 
+int* generate_matrix_rnd(int number_row, int number_col)
+{
+    int* matrix = new int [number_row * number_col];
+	for (size_t i = 0; i < number_row * number_col; i++)
+		matrix[i] = rand() % 100;
+	return matrix;
+}
 
 int main()
 {
     int M = 10, N = 5, K = 6;
-	int* A = new int [M * K];
-	int* B = new int [K * N];
+	int* A = generate_matrix_rnd(M, K);
+	int* B = generate_matrix_rnd(K, N);
 
 	int* C = new int [M * N];
 
