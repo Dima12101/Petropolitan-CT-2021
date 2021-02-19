@@ -1,5 +1,7 @@
 import asyncio
 import sys
+import re
+from datetime import datetime
 
 from . import config
 from .jobs import create_jobs_schedule, handle_jobs_schedule, add_job_to_schedule
@@ -17,25 +19,26 @@ async def handle_client(reader, writer):
 
     # ====== Processing data ======
     print('handle_client: Processing...')
-    command, dt = data.split('#')
+    command, dt = data.split('#') # TODO: Не безопасное разделение
 
-    _process = lambda val: 'NULL' if val == '*' else int(val)
-    
-    # TODO: Валидация
-    date, time = dt.split('T')
-    year, month, day = list(map(_process, date.split('-')))
-    hour, minute, second = list(map(_process, time.split(':')))
+    try:
+        dt = datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        print('handle_client: Response ERROR...')
+        writer.write(b'ERROR')
+        await writer.drain()
+        writer.close()
     # =============================
 
-    # Response to client
-    print('handle_client: Response...')
-    writer.write(b'Ok!') # TODO: Добавить сообщение об ошибке
+    # Response OK to client
+    print('handle_client: Response OK...')
+    writer.write(b'OK')
     await writer.drain()
     writer.close()
 
     # Adding job to schedule
     print('handle_client: Adding job to schedule...')
-    add_job_to_schedule(command, (year, month, day, hour, minute, second))
+    add_job_to_schedule(command, dt)
 
     print('handle_client: END')
 

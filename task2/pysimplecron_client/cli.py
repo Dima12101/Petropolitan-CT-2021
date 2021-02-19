@@ -24,22 +24,22 @@ def send_to_server(command, time):
     response = sock.recv(1024).decode()
     sock.close()
 
-    if response != 'Error':
+    if response != 'ERROR':
         print('The job was successfully added to the schedule!')
     else:
         print('An error occurred!')
 
 
 def validate_time(time):
-    pattern = re.compile(r'^([0-9]{4}|\*)\-([0-9]{2}|\*)-([0-9]{2}|\*) ([0-9]{2}|\*):([0-9]{2}|\*):([0-9]{2}|\*)$')
+    pattern = re.compile(r'^([0-9]{4})\-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})$')
     return pattern.search(time) is not None
 
 @click.command()
 @click.option("-c", "--command", help="Shell command which will be run.")
 @click.option("-t", "--time", 
-help="The time at which the command will be run. Format YYYY-MM-DD hh:mm:ss. If '*' is specified, it means 'every'")
+help="The time at which the command will be run. Format YYYY-MM-DD hh:mm:ss.")
 def main(command, time):
-    '''Example call: python cli.py -c "ls ." -t "2021-02-* *:20:00"'''
+    '''Example call: python cli.py -c "ls ." -t "2021-02-19 14:20:00"'''
     if validate_time(time):
         send_to_server(command, time)
     else:
