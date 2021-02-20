@@ -31,8 +31,8 @@ def add_job_to_schedule(command, datetime, uid, gid):
 
 def _set_cred(uid, gid):
     def wrapper():
-        os.setuid(uid)
         os.setgid(gid)
+        os.setuid(uid)
     return wrapper
 
 async def handle_jobs_schedule():

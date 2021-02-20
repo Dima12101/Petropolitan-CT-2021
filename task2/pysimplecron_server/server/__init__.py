@@ -56,12 +56,13 @@ def run():
     server = loop.run_until_complete(server_coro)
     print('Servier on {}'.format(server.sockets[0].getsockname()))
 
-    # Set mode to allow anyone to access socket
-    os.chmod(config.SOCK_FILE, 0o777)
-
     if not config.JOBS_SCHEDULE_PATH.exists(): create_jobs_schedule()
     # Register handle of jobs's schedule coroutine
     h_jobs_schedule = loop.create_task(handle_jobs_schedule())
+
+    # Set mode to allow anyone to access
+    os.chmod(config.SOCK_FILE, 0o777)
+    os.chmod(config.JOBS_SCHEDULE_PATH, 0o777)
 
     # Run loop
     try:
