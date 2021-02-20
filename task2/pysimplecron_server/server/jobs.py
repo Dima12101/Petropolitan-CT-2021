@@ -1,5 +1,6 @@
 import asyncio
 import sqlite3
+import os
 from datetime import datetime
 
 from . import config
@@ -11,40 +12,50 @@ def create_jobs_schedule():
     c.execute('''CREATE TABLE jobs
                  (id INTEGER PRIMARY KEY,
                   command TEXT NOT NULL,
-                  datetime TIMESTAMP)''')
+                  datetime TIMESTAMP NOT NULL,
+                  uid INTEGER NOT NULL,
+                  gid INTEGER NOT NULL)''')
     conn.commit()
     conn.close()
 
 
-def add_job_to_schedule(command, datetime):
+def add_job_to_schedule(command, datetime, uid, gid):
     conn = sqlite3.connect(config.JOBS_SCHEDULE_PATH)
     c = conn.cursor()
-    c.execute(f"INSERT INTO jobs(command, datetime) VALUES ('{command}','{datetime}')")
+    
+    values = f"'{command}','{datetime}',{uid},{gid}"
+    c.execute(f"INSERT INTO jobs(command,datetime,uid,gid) VALUES ({values})")
+    
     conn.commit()
     conn.close()
 
+def _set_cred(uid, gid):
+    def wrapper():
+        os.setuid(uid)
+        os.setgid(gid)
+    return wrapper
 
 async def handle_jobs_schedule():
     while True:
         await asyncio.sleep(2)  # To avoid loading the CPU
 
         datetime_now = datetime.now()
-        #print('handle_job_queue:', datetime_now)
 
         # All jobs that should be started on a schedule
         conn = sqlite3.connect(config.JOBS_SCHEDULE_PATH)
         c = conn.cursor()
-        c.execute(f"SELECT id, command FROM jobs WHERE datetime <= '{datetime_now}'")
+        c.execute(f"SELECT id, command, uid, gid FROM jobs WHERE datetime <= '{datetime_now}'")
         jobs = c.fetchall()
         print(jobs)
 
         # Run all jobs
         for job in jobs:
-            id, command = job
-            proc = await asyncio.create_subprocess_shell(
+            id, command, uid, gid = job
+            await asyncio.create_subprocess_shell(
                 command,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE)
+                stderr=asyncio.subprocess.PIPE,
+                preexec_fn=_set_cred(uid, gid))
 
             # TODO: Обработка ошибок !
 

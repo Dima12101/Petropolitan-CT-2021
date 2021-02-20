@@ -1,7 +1,6 @@
 import click
 import socket
 import re
-import struct
 
 SOCK_FILE = '/tmp/pysimplecron.sock'
 
@@ -16,10 +15,6 @@ def send_to_server(command, time):
     except ConnectionRefusedError:
         print('The server is not available!')
         return
-
-    creds = sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i'))
-    pid, uid, gid = struct.unpack('3i', creds)
-    print(pid, uid, gid)
 
     # Sending data to server
     print('send_to_server: Sending...')

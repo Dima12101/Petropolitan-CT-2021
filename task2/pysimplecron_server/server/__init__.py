@@ -1,6 +1,7 @@
 import asyncio
 import socket
 import struct
+import os
 from datetime import datetime
 
 from . import config
@@ -15,6 +16,7 @@ async def handle_client(reader, writer):
     data = await reader.read(100)
     data = data.decode()
 
+    # Get Socket Credentionals (uid and gid)
     sock = writer.transport.get_extra_info("socket")
     creds = sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i'))
     _, uid, gid = struct.unpack('3i', creds)
@@ -40,7 +42,7 @@ async def handle_client(reader, writer):
 
     # Adding job to schedule
     print('handle_client: Adding job to schedule...')
-    add_job_to_schedule(command, dt)
+    add_job_to_schedule(command, dt, uid, gid)
 
     print('handle_client: END')
 
@@ -53,6 +55,9 @@ def run():
     server_coro = asyncio.start_unix_server(handle_client, config.SOCK_FILE, loop=loop)
     server = loop.run_until_complete(server_coro)
     print('Servier on {}'.format(server.sockets[0].getsockname()))
+
+    # Set mode to allow anyone to access socket
+    os.chmod(config.SOCK_FILE, 0o777)
 
     if not config.JOBS_SCHEDULE_PATH.exists(): create_jobs_schedule()
     # Register handle of jobs's schedule coroutine
