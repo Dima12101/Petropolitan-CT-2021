@@ -1,6 +1,7 @@
 import asyncio
 import sqlite3
 import os
+import logging
 from datetime import datetime
 
 from . import config
@@ -35,6 +36,20 @@ def _set_cred(uid, gid):
         os.setuid(uid)
     return wrapper
 
+async def executer_job(command, dt, uid, gid):
+    proc = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        preexec_fn=_set_cred(uid, gid))
+    
+    stdout, stderr = await proc.communicate()
+
+    log = f'[{dt} - {command!r} exited with {proc.returncode}]'
+    if stdout: log += f'\n[stdout]\n{stdout.decode()}'
+    if stderr: log += f'\n[stderr]\n{stderr.decode()}'
+    logging.info(log)
+
 async def handle_jobs_schedule():
     while True:
         await asyncio.sleep(2)  # To avoid loading the CPU
@@ -44,29 +59,20 @@ async def handle_jobs_schedule():
         # All jobs that should be started on a schedule
         conn = sqlite3.connect(config.JOBS_SCHEDULE_PATH)
         c = conn.cursor()
-        c.execute(f"SELECT id, command, uid, gid FROM jobs WHERE datetime <= '{datetime_now}'")
+        c.execute(f"SELECT * FROM jobs WHERE datetime <= '{datetime_now}'")
         jobs = c.fetchall()
         print(jobs)
 
         # Run all jobs
         for job in jobs:
-            id, command, uid, gid = job
-            await asyncio.create_subprocess_shell(
-                command,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                preexec_fn=_set_cred(uid, gid))
+            id, command, dt, uid, gid = job
 
-            # TODO: Обработка ошибок !
+            # Run job
+            asyncio.run_coroutine_threadsafe(
+                executer_job(command, dt, uid, gid),
+                asyncio.events.get_event_loop())
 
-            # stdout, stderr = await proc.communicate()
-
-            # print(f'[{command!r} exited with {proc.returncode}]')
-            # if stdout:
-            #     print(f'[stdout]\n{stdout.decode()}')
-            # if stderr:
-            #     print(f'[stderr]\n{stderr.decode()}')
-
+            # Delete job
             c.execute(f"DELETE FROM jobs WHERE id = {id}")
             conn.commit()
 

@@ -42,12 +42,12 @@ def validate_time(time):
 help="The time at which the command will be run. Format YYYY-MM-DD hh:mm:ss.")
 def main(command, time):
     '''Example call: python cli.py -c "ls ." -t "2021-02-19 14:20:00"'''
+
     uid, gid = os.getuid(), os.getgid()
     if uid < 1000 or gid < 1000: print('Not allowed to run commands as system users!'); exit()
     if not validate_time(time): print('Time format is not valid!'); exit()
-        
+
     send_to_server(command, time)
 
-    
 if __name__ == '__main__':
     main()
