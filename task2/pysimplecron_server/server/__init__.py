@@ -1,12 +1,11 @@
 import asyncio
-import sys
-import re
+import socket
+import struct
+import pwd
 from datetime import datetime
 
 from . import config
 from .jobs import create_jobs_schedule, handle_jobs_schedule, add_job_to_schedule
-
-sys.path.append(config.BASE_DIR)
 
 
 async def handle_client(reader, writer):
@@ -16,6 +15,16 @@ async def handle_client(reader, writer):
     print('handle_client: Recieving...')
     data = await reader.read(100)
     data = data.decode()
+
+    sock = writer.transport.get_extra_info("socket")
+    print(sock.getpeername())
+
+    creds = sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i'))
+    pid, uid, gid = struct.unpack('3i', creds)
+    print(pid, uid, gid)
+    user_info = pwd.getpwuid(uid)
+    username = f"{user_info.pw_name} ({uid})" if user_info and user_info.pw_name else uid
+    print(username)
 
     # ====== Processing data ======
     print('handle_client: Processing...')

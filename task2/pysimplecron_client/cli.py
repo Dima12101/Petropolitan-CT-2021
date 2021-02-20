@@ -9,6 +9,7 @@ def send_to_server(command, time):
     # Connecting with server
     print('send_to_server: Connecting...')
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
     try:
         sock.connect((HOST, PORT))
     except ConnectionRefusedError:
