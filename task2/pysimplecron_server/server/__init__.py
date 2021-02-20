@@ -1,7 +1,6 @@
 import asyncio
 import socket
 import struct
-import pwd
 from datetime import datetime
 
 from . import config
@@ -17,14 +16,8 @@ async def handle_client(reader, writer):
     data = data.decode()
 
     sock = writer.transport.get_extra_info("socket")
-    print(sock.getpeername())
-
     creds = sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i'))
-    pid, uid, gid = struct.unpack('3i', creds)
-    print(pid, uid, gid)
-    user_info = pwd.getpwuid(uid)
-    username = f"{user_info.pw_name} ({uid})" if user_info and user_info.pw_name else uid
-    print(username)
+    _, uid, gid = struct.unpack('3i', creds)
 
     # ====== Processing data ======
     print('handle_client: Processing...')
@@ -57,7 +50,7 @@ def run():
     loop = asyncio.get_event_loop()
 
     # Register socket-server coroutine
-    server_coro = asyncio.start_server(handle_client, config.HOST, config.PORT, loop=loop)
+    server_coro = asyncio.start_unix_server(handle_client, config.SOCK_FILE, loop=loop)
     server = loop.run_until_complete(server_coro)
     print('Servier on {}'.format(server.sockets[0].getsockname()))
 
