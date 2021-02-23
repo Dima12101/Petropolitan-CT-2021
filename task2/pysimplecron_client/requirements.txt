@@ -1,1 +1,4 @@
+altgraph==0.17
 click==7.1.2
+pyinstaller==4.2
+pyinstaller-hooks-contrib==2020.11

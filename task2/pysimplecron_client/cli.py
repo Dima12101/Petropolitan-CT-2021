@@ -1,12 +1,13 @@
 import click
 import socket
 import re
-import os
+import os, sys
 
 SOCK_FILE = '/run/pysimplecron.sock'
 
 def send_to_server(command, time):
     # Connecting with server
+    if not os.path.exists(SOCK_FILE): print('The server is not available!') ; sys.exit()
     print('send_to_server: Connecting...')
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
@@ -43,9 +44,10 @@ help="The time at which the command will be run. Format YYYY-MM-DD hh:mm:ss.")
 def main(command, time):
     '''Example call: python cli.py -c "ls ." -t "2021-02-19 14:20:00"'''
 
+    if command is None or time is None: print('Not enough arguments!'); sys.exit()
     uid, gid = os.getuid(), os.getgid()
-    if uid < 1000 or gid < 1000: print('Not allowed to run commands as system users!'); exit()
-    if not validate_time(time): print('Time format is not valid!'); exit()
+    if uid < 1000 or gid < 1000: print('Not allowed to run commands as system users!'); sys.exit()
+    if not validate_time(time): print('Time format is not valid!'); sys.exit()
 
     send_to_server(command, time)
 
