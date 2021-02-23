@@ -33,6 +33,10 @@ async def handle_client(reader, writer):
         await writer.drain()
         writer.close()
     # =============================
+    print('handle_client: Accepted job.')
+    print('> command:', command)
+    print('> datetime:', dt)
+    print('> cred:', f'uid({uid})', f'gid({gid})')
 
     # Response OK to client
     print('handle_client: Response OK...')

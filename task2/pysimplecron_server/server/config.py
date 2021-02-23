@@ -3,7 +3,7 @@ import logging
 
 BASEDIR = BASE_DIR = Path(__file__).parent.parent.absolute()
 
-SOCK_FILE = '/tmp/pysimplecron.sock'
+SOCK_FILE = '/run/pysimplecron.sock'
 
 JOBS_SCHEDULE_PATH = BASEDIR / 'schedule.db'
 

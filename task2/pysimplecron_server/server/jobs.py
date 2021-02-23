@@ -61,13 +61,14 @@ async def handle_jobs_schedule():
         c = conn.cursor()
         c.execute(f"SELECT * FROM jobs WHERE datetime <= '{datetime_now}'")
         jobs = c.fetchall()
-        print(jobs)
+        print(f'handle_jobs_schedule: Active jobs - {len(jobs)}')
 
         # Run all jobs
         for job in jobs:
             id, command, dt, uid, gid = job
 
             # Run job
+            print(f'handle_jobs_schedule: Run job')
             asyncio.run_coroutine_threadsafe(
                 executer_job(command, dt, uid, gid),
                 asyncio.events.get_event_loop())

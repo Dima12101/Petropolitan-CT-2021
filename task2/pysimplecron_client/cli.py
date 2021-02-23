@@ -3,7 +3,7 @@ import socket
 import re
 import os
 
-SOCK_FILE = '/tmp/pysimplecron.sock'
+SOCK_FILE = '/run/pysimplecron.sock'
 
 def send_to_server(command, time):
     # Connecting with server
