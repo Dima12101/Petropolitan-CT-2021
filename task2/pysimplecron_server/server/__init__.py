@@ -1,7 +1,7 @@
 import asyncio
 import socket
 import struct
-import os
+import os, sys
 from datetime import datetime
 
 from . import config
@@ -9,10 +9,10 @@ from .jobs import create_jobs_schedule, handle_jobs_schedule, add_job_to_schedul
 
 
 async def handle_client(reader, writer):
-    print('handle_client: START')
+    print('handle_client: START', file=sys.stdout, flush=True)
     
     # Recieve data from client
-    print('handle_client: Recieving...')
+    print('handle_client: Recieving...', file=sys.stdout, flush=True)
     data = await reader.read(100)
     data = data.decode()
 
@@ -22,33 +22,33 @@ async def handle_client(reader, writer):
     _, uid, gid = struct.unpack('3i', creds)
 
     # ====== Processing data ======
-    print('handle_client: Processing...')
+    print('handle_client: Processing...', file=sys.stdout, flush=True)
     command, dt = data.split('#') # TODO: Не безопасное разделение
 
     try:
         dt = datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
     except ValueError:
-        print('handle_client: Response ERROR...')
+        print('handle_client: Response ERROR...', file=sys.stdout, flush=True)
         writer.write(b'ERROR')
         await writer.drain()
         writer.close()
     # =============================
-    print('handle_client: Accepted job.')
-    print('> command:', command)
-    print('> datetime:', dt)
-    print('> cred:', f'uid({uid})', f'gid({gid})')
+    print('handle_client: Accepted job.', file=sys.stdout, flush=True)
+    print('> command:', command, file=sys.stdout, flush=True)
+    print('> datetime:', dt, file=sys.stdout, flush=True)
+    print('> cred:', f'uid({uid})', f'gid({gid})', file=sys.stdout, flush=True)
 
     # Response OK to client
-    print('handle_client: Response OK...')
+    print('handle_client: Response OK...', file=sys.stdout, flush=True)
     writer.write(b'OK')
     await writer.drain()
     writer.close()
 
     # Adding job to schedule
-    print('handle_client: Adding job to schedule...')
+    print('handle_client: Adding job to schedule...', file=sys.stdout, flush=True)
     add_job_to_schedule(command, dt, uid, gid)
 
-    print('handle_client: END')
+    print('handle_client: END', file=sys.stdout, flush=True)
 
 
 ''' =============== RUN PYSIMPLECRON SERVER ==============='''
@@ -58,7 +58,7 @@ def run():
     # Register socket-server coroutine
     server_coro = asyncio.start_unix_server(handle_client, config.SOCK_FILE, loop=loop)
     server = loop.run_until_complete(server_coro)
-    print('Servier on {}'.format(server.sockets[0].getsockname()))
+    print('Servier on {}'.format(server.sockets[0].getsockname()), file=sys.stdout, flush=True)
 
     if not config.JOBS_SCHEDULE_PATH.exists(): create_jobs_schedule()
     # Register handle of jobs's schedule coroutine

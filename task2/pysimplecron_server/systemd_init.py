@@ -13,6 +13,7 @@ ListenStream=/run/pysimplecron.sock
 
 [Install]
 WantedBy=sockets.target""")
+    if not os.path.exists('/var/log/pysimplecron'): os.mkdir('/var/log/pysimplecron')
     with open('/etc/systemd/system/pysimplecron.service', 'w') as service_file:
         service_file.write(
 f"""[Unit]
@@ -25,6 +26,9 @@ Type=simple
 Restart=always
 RestartSec=1
 User={pwd.getpwuid(os.getuid()).pw_name}
+StandardOutput=append:/var/log/pysimplecron/access.log
+StandardError=append:/var/log/pysimplecron/error.log
+WorkingDirectory={BASEDIR}
 ExecStart={BASEDIR / 'venv/bin/python3'} run.py
 
 [Install]

@@ -1,6 +1,6 @@
 import asyncio
 import sqlite3
-import os
+import os, sys
 import logging
 from datetime import datetime
 
@@ -61,14 +61,14 @@ async def handle_jobs_schedule():
         c = conn.cursor()
         c.execute(f"SELECT * FROM jobs WHERE datetime <= '{datetime_now}'")
         jobs = c.fetchall()
-        print(f'handle_jobs_schedule: Active jobs - {len(jobs)}')
+        print(f'handle_jobs_schedule: Active jobs - {len(jobs)}', file=sys.stdout, flush=True)
 
         # Run all jobs
         for job in jobs:
             id, command, dt, uid, gid = job
 
             # Run job
-            print(f'handle_jobs_schedule: Run job')
+            print(f'handle_jobs_schedule: Run job', file=sys.stdout, flush=True)
             asyncio.run_coroutine_threadsafe(
                 executer_job(command, dt, uid, gid),
                 asyncio.events.get_event_loop())
